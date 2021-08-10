@@ -6,6 +6,9 @@
                     <div class="form-group row">
                         <label for="title" class="col-sm-3 col-form-label">Title</label>
                         <input type="text" class="col-sm-9 form-control" id="title" v-model="task.title">
+                        <span>
+                            {{ titleError }}
+                        </span>
                     </div>
                     <div class="form-group row">
                         <label for="content" class="col-sm-3 col-form-label">Content</label>
@@ -15,7 +18,7 @@
                         <label for="person-in-charge" class="col-sm-3 col-form-label">Person In Charge</label>
                         <input type="text" class="col-sm-9 form-control" id="person-in-charge" v-model="task.person_in_charge">
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary" :disabled="!canSubmit">Submit</button>
                 </form>
             </div>
         </div>
@@ -26,16 +29,42 @@
     export default {
         data: function () {
             return {
-                task: {}
+                task: {},
+                errors: null,
+                canSubmit: false,
             }
+        },
+        computed: {
+            titleError: function() {
+                if (this.errors) {
+                    if (this.errors.title) {
+                        return this.errors.title[0];
+                    }
+                }
+                return "";
+            },
         },
         methods: {
             submit() {
                 axios.post('/api/tasks', this.task)
                     .then((res) => {
                         this.$router.push({name: 'task.list'});
+                    })
+                    .catch((error) => {
+                        this.errors = error.response.data.errors;
+                        console.log(this.errors);
                     });
             }
+        },
+        watch: {
+            'task.title': function(val){
+                if (val === '') {
+                    this.canSubmit = false;
+                    return;
+                }
+                console.log(val.length);
+                return this.canSubmit = true;
+            },
         }
     }
 </script>
